@@ -1,0 +1,18 @@
+# Virtual environment
+venv/
+
+# Environment variables and secrets
+.env
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+
+# Test and coverage output
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editor settings
+.vscode/
+.idea/

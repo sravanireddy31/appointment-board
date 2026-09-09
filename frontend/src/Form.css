@@ -1,0 +1,18 @@
+.appointment-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding: 20px;
+  margin-bottom: 18px;
+  border: 1px solid #dbe1f2;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.appointment-form h2, .form-actions { grid-column: 1 / -1; }
+.appointment-form h2 { margin: 0; color: #17213d; }
+.appointment-form label { display: grid; gap: 6px; color: #4b556b; font-size: .85rem; font-weight: 700; }
+.appointment-form textarea { min-height: 40px; padding: 10px; border: 1px solid #cfd5e4; border-radius: 7px; resize: vertical; font: inherit; }
+.form-actions { display: flex; gap: 8px; }
+
+@media (max-width: 700px) { .appointment-form { grid-template-columns: 1fr; } }

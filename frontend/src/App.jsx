@@ -1,13 +1,22 @@
 import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 import './Form.css'
+import CalendarView from './CalendarView'
 import { cancelAppointment, completeAppointment, createAppointment, getAppointments, updateAppointment } from './api/appointments'
 
 const statuses = ['scheduled', 'completed', 'cancelled']
 const emptyForm = { title: '', description: '', date: '', start_time: '', end_time: '', status: 'scheduled' }
 
 function errorMessage(error) {
-  return error.response?.data?.detail || 'Unable to reach the appointment service. Please try again.'
+  const detail = error.response?.data?.detail
+
+  // FastAPI validation errors use an array of detail objects.
+  // Convert them to text before rendering them in the UI.
+  if (Array.isArray(detail)) {
+    return detail.map((item) => item.msg || 'Invalid input.').join(' ')
+  }
+
+  return detail || error.message || 'Unable to reach the appointment service. Please try again.'
 }
 
 function formatDate(value) {
@@ -30,6 +39,7 @@ function App() {
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  const [view, setView] = useState('board')
 
   const loadAppointments = useCallback(async () => {
     setLoading(true)
@@ -98,7 +108,12 @@ function App() {
           <button className="primary-button" type="button" onClick={openCreateForm}>+ Add Appointment</button>
         </header>
 
-        <section className="filters" aria-label="Appointment filters">
+        <nav className="view-navigation" aria-label="Appointment views">
+          <button className={`view-tab ${view === 'board' ? 'view-tab-active' : ''}`} type="button" onClick={() => setView('board')}>Board view</button>
+          <button className={`view-tab ${view === 'calendar' ? 'view-tab-active' : ''}`} type="button" onClick={() => setView('calendar')}>Calendar view</button>
+        </nav>
+
+        {view === 'board' && <><section className="filters" aria-label="Appointment filters">
           <label>Date<input type="date" value={date} onChange={(event) => setDate(event.target.value)} /></label>
           <label>Status
             <select value={status} onChange={(event) => setStatus(event.target.value)}>
@@ -134,14 +149,15 @@ function App() {
                 <td data-label="End time">{formatTime(appointment.end_time)}</td>
                 <td data-label="Status"><span className={`status status-${appointment.status}`}>{appointment.status}</span></td>
                 <td data-label="Actions"><div className="actions">
-                  <button className="action-button" type="button" onClick={() => openEditForm(appointment)}>Edit</button>
+                  <button className="action-button" type="button" disabled={appointment.status !== 'scheduled'} onClick={() => openEditForm(appointment)}>Edit</button>
                   <button className="action-button" type="button" disabled={saving || appointment.status !== 'scheduled'} onClick={() => changeStatus(appointment.id, 'complete')}>Complete</button>
-                  <button className="action-button danger-button" type="button" disabled={saving || appointment.status === 'cancelled'} onClick={() => changeStatus(appointment.id, 'cancel')}>Cancel</button>
+                  <button className="action-button danger-button" type="button" disabled={saving || appointment.status !== 'scheduled'} onClick={() => changeStatus(appointment.id, 'cancel')}>Cancel</button>
                 </div></td>
               </tr>)}</tbody>
             </table></div>
           )}
-        </section>
+        </section></>}
+        {view === 'calendar' && <CalendarView appointments={appointments} formatTime={formatTime} />}
       </section>
     </main>
   )

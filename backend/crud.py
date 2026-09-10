@@ -92,6 +92,17 @@ def update_appointment(
     appointment_update: schemas.AppointmentUpdate,
 ) -> models.Appointment:
     """Partially update an appointment after checking its resulting time slot."""
+    if db_appointment.status == "completed":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Completed appointments cannot be edited.",
+        )
+    if db_appointment.status == "cancelled":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cancelled appointments cannot be edited.",
+        )
+
     update_data = appointment_update.model_dump(exclude_unset=True)
     updated_date = update_data.get("date", db_appointment.date)
     updated_start_time = update_data.get("start_time", db_appointment.start_time)
@@ -127,6 +138,17 @@ def complete_appointment(
     db: Session, db_appointment: models.Appointment
 ) -> models.Appointment:
     """Mark an appointment as completed without deleting it."""
+    if db_appointment.status == "completed":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Appointment is already completed.",
+        )
+    if db_appointment.status == "cancelled":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cancelled appointments cannot be completed.",
+        )
+
     db_appointment.status = "completed"
     db.commit()
     db.refresh(db_appointment)
@@ -137,6 +159,17 @@ def cancel_appointment(
     db: Session, db_appointment: models.Appointment
 ) -> models.Appointment:
     """Mark an appointment as cancelled without deleting it."""
+    if db_appointment.status == "completed":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Completed appointments cannot be cancelled.",
+        )
+    if db_appointment.status == "cancelled":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Appointment is already cancelled.",
+        )
+
     db_appointment.status = "cancelled"
     db.commit()
     db.refresh(db_appointment)
